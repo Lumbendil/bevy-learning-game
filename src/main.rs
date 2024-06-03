@@ -50,8 +50,7 @@ fn setup(
     commands.spawn((
         RigidBody::KinematicPositionBased,
         KinematicCharacterController {
-            // The character offset is set to 0.01.
-            offset: CharacterLength::Absolute(10.0),
+            offset: CharacterLength::Absolute(0.1),
             ..default()
         },
         Collider::ball(16.0),
@@ -127,7 +126,7 @@ fn main() {
                 .load_collection::<MyAssets>(),
         )
         .add_systems(OnEnter(MyStates::Gameplay), setup)
-        .add_systems(Update, (
+        .add_systems(FixedUpdate, (
             keyboard_input,
             camera_follow.after(keyboard_input),
             enemies::enemy_chase,
