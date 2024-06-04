@@ -3,8 +3,6 @@ use bevy_editor_pls::prelude::*;
 use bevy_rapier2d::prelude::*;
 use bevy_rand::prelude::*;
 use bevy_asset_loader::prelude::*;
-use bevy_asset_loader::asset_collection::AssetCollection;
-use crate::enemies::Enemy;
 
 mod enemies;
 
@@ -51,6 +49,7 @@ fn setup(
     commands.spawn((
         Collider::ball(16.0),
         Sensor,
+        ActiveEvents::COLLISION_EVENTS,
         SpriteBundle {
             transform: Transform::from_scale(Vec3::splat(2.0)).with_translation(Vec3::new(0.0, 0.0, 1.0)),
             texture: my_assets.characters_sprite.clone(),

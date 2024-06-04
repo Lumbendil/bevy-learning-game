@@ -64,9 +64,16 @@ pub fn enemy_chase(
 }
 
 pub fn enemy_attack(
-    mut collision_events: EventReader<CollisionEvent>
+    mut collision_events: EventReader<CollisionEvent>,
+    e: Query<&Transform, With<Enemy>>,
 ) {
+
     for collision_event in collision_events.read() {
-        info!("{:?}", collision_event);
+        let enemy = match collision_event {
+            CollisionEvent::Started(_, target, _) => e.get(*target).unwrap(),
+            CollisionEvent::Stopped(_, target, _) => e.get(*target).unwrap(),
+        };
+
+        info!("{:?}", enemy);
     }
 }
