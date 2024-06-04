@@ -4,6 +4,7 @@ use bevy_rapier2d::prelude::*;
 use bevy_rand::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_asset_loader::asset_collection::AssetCollection;
+use crate::enemies::Enemy;
 
 mod enemies;
 
@@ -48,14 +49,8 @@ fn setup(
     ));
 
     commands.spawn((
-        RigidBody::KinematicPositionBased,
-        KinematicCharacterController {
-            offset: CharacterLength::Absolute(0.1),
-            ..default()
-        },
         Collider::ball(16.0),
-        Friction::coefficient(0.0),
-        Restitution::coefficient(0.3),
+        Sensor,
         SpriteBundle {
             transform: Transform::from_scale(Vec3::splat(2.0)).with_translation(Vec3::new(0.0, 0.0, 1.0)),
             texture: my_assets.characters_sprite.clone(),
@@ -71,14 +66,14 @@ fn setup(
     ));
 
     commands.insert_resource(enemies::Spawner {
-        timer: Timer::from_seconds(10.0, TimerMode::Repeating),
+        timer: Timer::from_seconds(1.0, TimerMode::Repeating),
     });
 }
 
 fn keyboard_input(
     keys: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    mut p: Query<(&mut KinematicCharacterController, &Player), With<Player>>,
+    mut p: Query<(&mut Transform, &Player), With<Player>>,
 ) {
     let mut direction = Vec2::default();
     if keys.pressed(KeyCode::KeyW) {
@@ -97,8 +92,7 @@ fn keyboard_input(
     let (mut player_transform, player_info) = p.get_single_mut().expect("Player should always be available");
 
     let movement = direction * time.delta_seconds() * player_info.speed;
-    info!("Movement: {}", &movement);
-    player_transform.translation = Some(movement);
+    player_transform.translation += movement.extend(0.0);
 }
 
 
@@ -131,6 +125,7 @@ fn main() {
             camera_follow.after(keyboard_input),
             enemies::enemy_chase,
             enemies::spawn_enemies,
-        ).run_if(in_state(MyStates::Gameplay)))
+            enemies::enemy_attack,
+        ).chain().run_if(in_state(MyStates::Gameplay)))
         .run();
 }

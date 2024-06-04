@@ -21,21 +21,22 @@ pub fn spawn_enemies(
     my_assets: Res<MyAssets>,
     mut rng: ResMut<GlobalEntropy<WyRand>>
 ) {
-    let first_run = spawn_timer.timer.elapsed_secs() == 0.0;
+    // let first_run = spawn_timer.timer.elapsed_secs() == 0.0;
     // TODO: Better logic for spawning. Most likely using stopwatch
+    let first_run = false;
     spawn_timer.timer.tick(time.delta());
 
     if first_run || spawn_timer.timer.just_finished() {
         let position = 100.0 * (rng.next_u32() as f32 / u32::MAX as f32) + 100.0;
         commands.spawn((
-            RigidBody::KinematicPositionBased,
-            KinematicCharacterController {
-                offset: CharacterLength::Absolute(0.1),
+            RigidBody::Dynamic,
+            LockedAxes::ROTATION_LOCKED,
+            GravityScale(0.0),
+            Velocity {
                 ..default()
             },
+            AdditionalMassProperties::Mass(1.0),
             Collider::ball(16.0),
-            Friction::coefficient(0.0),
-            Restitution::coefficient(0.3),
             SpriteBundle {
                 transform: Transform::from_scale(Vec3::splat(2.0)).with_translation(Vec2::splat(position).extend(0.0)),
                 texture: my_assets.enemies_sprite.clone(),
@@ -51,14 +52,21 @@ pub fn spawn_enemies(
 }
 
 pub fn enemy_chase(
-    time: Res<Time>,
     p: Query<&Transform, With<Player>>,
-    mut e: Query<(&mut KinematicCharacterController, &Transform), (With<Enemy>, Without<Player>)>,
+    mut e: Query<(&mut Velocity, &Transform), (With<Enemy>, Without<Player>)>,
 ) {
     let speed = 10.0;
     let player = p.get_single().expect("Player not found");
 
-    for (mut controller, transform) in e.iter_mut() {
-        controller.translation = Some((player.translation - transform.translation).truncate().normalize() * speed * time.delta_seconds());
+    for (mut velocity, transform) in e.iter_mut() {
+        velocity.linvel = (player.translation - transform.translation).truncate().normalize() * speed;
+    }
+}
+
+pub fn enemy_attack(
+    mut collision_events: EventReader<CollisionEvent>
+) {
+    for collision_event in collision_events.read() {
+        info!("{:?}", collision_event);
     }
 }
