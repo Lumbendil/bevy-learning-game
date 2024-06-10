@@ -33,6 +33,21 @@ struct Player {
 #[derive(Default, Component)]
 struct MainCamera;
 
+#[derive(Component)]
+struct Living {
+    pub max_health: i32,
+    pub current_health: i32,
+}
+
+impl Living {
+    fn new(health: i32) -> Self {
+        Self {
+            max_health: health,
+            current_health: health,
+        }
+    }
+}
+
 fn setup(
     mut commands: Commands,
     my_assets: Res<MyAssets>,
@@ -62,6 +77,7 @@ fn setup(
         Player {
             speed: 50.0,
         },
+        Living::new(50),
     ));
 
     commands.insert_resource(enemies::Spawner {
@@ -124,7 +140,8 @@ fn main() {
             camera_follow.after(keyboard_input),
             enemies::enemy_chase,
             enemies::spawn_enemies,
-            enemies::enemy_attack,
+            enemies::enemy_set_attacking,
+            enemies::enemy_trigger_attack,
         ).chain().run_if(in_state(MyStates::Gameplay)))
         .run();
 }
